@@ -33,10 +33,10 @@ public class EventService {
         synchronized (lock) {
             try {
                 log.info("Processing eventId={}", request.getEventId());
-
+                //return existing instead of throwing error
                 return eventRepository.findById(request.getEventId())
                         .map(existing -> {
-                            log.warn("Duplicate event received: {}", request.getEventId());
+                            log.warn("Duplicate event ignored: {}", request.getEventId());
                             return toResponse(existing);
                         })
                         .orElseGet(() -> {
@@ -57,7 +57,7 @@ public class EventService {
                         });
 
             } finally {
-                locks.remove(request.getEventId()); // prevent memory leak
+                locks.remove(request.getEventId());
             }
         }
     }
@@ -91,11 +91,16 @@ public class EventService {
         debits = debits == null ? BigDecimal.ZERO : debits;
 
         BigDecimal balance = credits.subtract(debits);
+        List<Event> events =
+                eventRepository.findByAccountIdOrderByEventTimestampAsc(accountId);
+        String currency = events.isEmpty()
+                ? "USD"
+                : events.get(events.size() - 1).getCurrency();
 
         return BalanceResponse.builder()
                 .accountId(accountId)
                 .balance(balance)
-                .currency("USD")
+                .currency(currency)
                 .build();
     }
 
@@ -103,7 +108,7 @@ public class EventService {
         return EventResponse.builder()
                 .eventId(event.getEventId())
                 .accountId(event.getAccountId())
-                .type(event.getType().name())
+                .type(event.getType())
                 .amount(event.getAmount())
                 .currency(event.getCurrency())
                 .eventTimestamp(event.getEventTimestamp())
