@@ -3,6 +3,7 @@ package com.ledger.api.service;
 import com.ledger.api.dto.*;
 import com.ledger.api.exception.EventNotFoundException;
 import com.ledger.api.model.Event;
+import com.ledger.api.model.EventResult;
 import com.ledger.api.repository.EventRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,7 +27,7 @@ public class EventService {
     }
 
     @Transactional
-    public EventResponse createEvent(EventRequest request) {
+    public EventResult createEvent(EventRequest request) {
 
         Object lock = locks.computeIfAbsent(request.getEventId(), k -> new Object());
 
@@ -37,7 +38,8 @@ public class EventService {
                 return eventRepository.findById(request.getEventId())
                         .map(existing -> {
                             log.warn("Duplicate event ignored: {}", request.getEventId());
-                            return toResponse(existing);
+                            existing.setMetadata(existing.getMetadata());
+                            return new EventResult(toResponse(existing), true);
                         })
                         .orElseGet(() -> {
                             Event event = Event.builder()
@@ -53,7 +55,7 @@ public class EventService {
 
                             Event saved = eventRepository.save(event);
                             log.info("Event saved successfully: {}", saved.getEventId());
-                            return toResponse(saved);
+                            return new EventResult(toResponse(saved), false);
                         });
 
             } finally {

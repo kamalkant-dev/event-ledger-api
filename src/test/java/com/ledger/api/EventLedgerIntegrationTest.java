@@ -88,7 +88,7 @@ class EventLedgerIntegrationTest {
         mockMvc.perform(post("/events")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
-                .andExpect(status().isCreated())
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.eventId").value("evt-dup"));
     }
 
