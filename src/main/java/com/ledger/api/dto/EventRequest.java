@@ -1,6 +1,5 @@
 package com.ledger.api.dto;
 
-import com.ledger.api.model.EventType;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
@@ -21,7 +20,8 @@ public class EventRequest {
     private String accountId;
 
     @NotNull(message = "type is required")
-    private EventType type;
+    @Pattern(regexp = "CREDIT|DEBIT")
+    private String type;
 
     @NotNull(message = "amount is required")
     @DecimalMin(value = "0.0", inclusive = false, message = "amount must be greater than 0")

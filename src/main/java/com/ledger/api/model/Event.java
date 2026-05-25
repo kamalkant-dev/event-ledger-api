@@ -24,9 +24,8 @@ public class Event {
     @Column(name = "account_id", nullable = false)
     private String accountId;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false)
-    private EventType type;
+    private String type;
 
     @Column(name = "amount", nullable = false, precision = 19, scale = 4)
     private BigDecimal amount;
