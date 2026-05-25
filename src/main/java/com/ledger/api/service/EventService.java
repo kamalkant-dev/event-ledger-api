@@ -6,6 +6,8 @@ import com.ledger.api.model.Event;
 import com.ledger.api.model.EventResult;
 import com.ledger.api.repository.EventRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -73,13 +75,17 @@ public class EventService {
     }
 
     @Transactional(readOnly = true)
-    public List<EventResponse> getEventsByAccount(String accountId) {
-        log.info("Fetching events for account={}", accountId);
+    public List<EventResponse> getEventsByAccount(String accountId, int page, int size) {
 
-        return eventRepository.findByAccountIdOrderByEventTimestampAsc(accountId)
+        log.info("Fetching events for account={} page={} size={}", accountId, page, size);
+
+        Pageable pageable = PageRequest.of(page, size);
+
+        return eventRepository
+                .findByAccountIdOrderByEventTimestampAsc(accountId, pageable)
                 .stream()
                 .map(this::toResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -93,11 +99,11 @@ public class EventService {
         debits = debits == null ? BigDecimal.ZERO : debits;
 
         BigDecimal balance = credits.subtract(debits);
-        List<Event> events =
-                eventRepository.findByAccountIdOrderByEventTimestampAsc(accountId);
-        String currency = events.isEmpty()
-                ? "USD"
-                : events.get(events.size() - 1).getCurrency();
+
+        String currency = eventRepository
+                .findTopByAccountIdOrderByEventTimestampDesc(accountId)
+                .map(Event::getCurrency)
+                .orElse("USD");
 
         return BalanceResponse.builder()
                 .accountId(accountId)
