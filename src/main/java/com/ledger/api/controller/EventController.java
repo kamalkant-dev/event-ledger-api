@@ -46,12 +46,17 @@ public class EventController {
         return ResponseEntity.ok(eventService.getEventById(id));
     }
 
-    @GetMapping("/events")
-    @Operation(summary = "List events for an account ordered by event timestamp")
-    public ResponseEntity<List<EventResponse>> getEvents(@RequestParam("account") String account) {
-        log.info("GET /events?account={}", account);
-        return ResponseEntity.ok(eventService.getEventsByAccount(account));
-    }
+@GetMapping("/events")
+@Operation(summary = "Get events by account", description = "Returns events sorted by eventTimestamp with pagination support")
+public ResponseEntity<List<EventResponse>> getEvents(
+        @RequestParam String account,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size) {
+
+    return ResponseEntity.ok(
+            eventService.getEventsByAccount(account, page, size)
+    );
+}
 
     @GetMapping("/accounts/{accountId}/balance")
     @Operation(summary = "Get the current computed balance for an account")

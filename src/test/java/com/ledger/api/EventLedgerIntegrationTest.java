@@ -194,4 +194,40 @@ class EventLedgerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.eventId").value("evt-get"));
     }
+    @Test
+    void getEvents_pagination() throws Exception {
+
+        String account = "acct-pag";
+
+        mockMvc.perform(post("/events")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(
+                        buildEvent("evt-1", account, "CREDIT", 100, "2026-05-15T10:00:00Z"))));
+
+        mockMvc.perform(post("/events")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(
+                        buildEvent("evt-2", account, "CREDIT", 200, "2026-05-15T11:00:00Z"))));
+
+        mockMvc.perform(post("/events")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(
+                        buildEvent("evt-3", account, "CREDIT", 300, "2026-05-15T12:00:00Z"))));
+
+        // page 0
+        mockMvc.perform(get("/events")
+                        .param("account", account)
+                        .param("page", "0")
+                        .param("size", "2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)));   // ✅ FIX HERE
+
+        // page 1
+        mockMvc.perform(get("/events")
+                        .param("account", account)
+                        .param("page", "1")
+                        .param("size", "2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)));
+    }
 }
