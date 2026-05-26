@@ -97,7 +97,7 @@ mvn test
 
 Once running, visit:
 ```
-http://localhost:8080/swagger-ui.html
+http://localhost:8080/swagger-ui/index.html
 ```
 
 ## H2 Console (Dev)
